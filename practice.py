@@ -6,6 +6,11 @@ import sys
 import nltk
 import csv
 from nltk.tokenize import TweetTokenizer
+import torch
+import torch.nn as nn
+from torch.autograd import Variable
+import torch.nn.functional as F
+import torch.optim as optim
 
 
 consumer_token = "7QclmKZ0uYE1guPPbmqjZ6i8v"
@@ -30,6 +35,16 @@ class tweetClassifier(nn.Module):
 
     def forward(self, tweet_vec):
         return F.log_softmax(self.linear(tweet_vec))
+
+# NN Functions, similarly from the tutorial 
+def make_tweet_vect(tokenized_tweet, token_to_index):
+    vect = torch.zeros(len(token_to_index))
+    for token in tokenized_tweet:
+        vect[token_to_index[token]] += 1
+    return vect.view(1, -1)
+
+def make_target(tag, tag_to_index):
+    return torch.LongTensor([tag_to_index[tag]])
 
 #reads a tab delimited text file of the format tweet id, topic, rating
 #and puts this info into a python dict of the form tweetid: rating
