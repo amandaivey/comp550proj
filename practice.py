@@ -11,6 +11,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 import torch.nn.functional as F
 import torch.optim as optim
+import numpy
 
 
 consumer_token = "7QclmKZ0uYE1guPPbmqjZ6i8v"
@@ -57,6 +58,56 @@ def build_token_indices(training_data, test_data):
             if token not in indices:
                 indices[token] = len(indices)
     return indices
+
+'''
+Takes as input the following:
+    training_data: A list of data in the form of (tokenized tweet, rating).
+    epoches: The number of epoches for which this model will be trained.
+    token_indices: A dictionary containing all possible types in the dataset, which allows one to map 
+        from a token to the location of its type in the tweet vector.
+    tag_indices: A dictionary mapping from any given tag in the dataset to its index in an output vector.
+    loss_function: The loss function used for training.
+    learning_rate: The learning rate used to initialize the model.
+Returns a tweetClassifer model trained to these specifications.
+'''
+def train(training_data, epoches, token_indices, tag_indices, loss_function, learning_rate):
+    model = tweetClassifier(len(tag_indices), len(token_indices))
+    optimizer = optim.SGD(model.parameters(), lr=learning_rate)
+
+    for epoch in range(epoches):
+        for tweet, tag in training_data:
+            # Zero the gradients
+            model.zero_grad()
+
+            # Assemble the vector representation of the tweet and the target
+            tweet_vect = Variable(make_tweet_vect(tweet, token_indices))
+            target = Variable(make_target(tag, tag_indices))
+
+            # Forward pass
+            log_probs = model(tweet_vect)
+
+            # Loss, Grad, update with optimizer
+            loss = loss_function(log_probs, target)
+            loss.backward()
+            optimizer.step()
+    return model
+
+def test(model, test_data, token_indices):
+    for tweet, tag in test_data:
+        tweet_vect = Variable(make_tweet_vect(tweet, token_indices))
+        log_probs = model(tweet_vect)
+        print(log_probs)
+
+def run_example_data():
+    sample_train = [(['I', 'hate', 'pie'],"n"), (['I', 'love', 'cats'],"p"), (['Cake', 'is', 'alright', ':)'],"p")]
+
+    sample_test = [(['I', 'love', 'cake'], "p")]
+
+    tag_to_index = {"n": 0,  "p": 1}
+    tok_indices = build_token_indices(sample_train, sample_test)
+
+    model = train(sample_train, 100, tok_indices, tag_to_index, nn.NLLLoss(), 0.1)
+    test(model, sample_test, tok_indices)
 
 #reads a tab delimited text file of the format tweet id, topic, rating
 #and puts this info into a python dict of the form tweetid: rating
