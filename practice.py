@@ -46,6 +46,18 @@ def make_tweet_vect(tokenized_tweet, token_to_index):
 def make_target(tag, tag_to_index):
     return torch.LongTensor([tag_to_index[tag]])
 
+'''
+Given training and test data in the format of a list of tuples of the form (tokenized tweet, tag)
+Returns a dictionary mapping from any given token to the index of its type in the tweet vector.
+'''
+def build_token_indices(training_data, test_data):
+    indices = {}
+    for tweet, _ in training_data+test_data:
+        for token in tweet:
+            if token not in indices:
+                indices[token] = len(indices)
+    return indices
+
 #reads a tab delimited text file of the format tweet id, topic, rating
 #and puts this info into a python dict of the form tweetid: rating
 #returns dict
