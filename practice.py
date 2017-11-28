@@ -18,14 +18,14 @@ auth.set_access_token(access_token, access_secret)
 file_to_read = sys.argv[1]
 
 #reads a tab delimited text file of the format tweet id, topic, rating
-#and puts this info into a python dict of the form tweetid: (topic, rating)
+#and puts this info into a python dict of the form tweetid: rating
 #returns dict
 def read_file(file_name):
     id_dict = {}
     with open(file_name, 'r+') as f:
         content = f.readlines()
     for item in content:
-        id_dict[item.strip().split("\t")[0]] = (item.strip().split("\t")[1], item.strip().split("\t")[2])
+        id_dict[item.strip().split("\t")[0]] = item.strip().split("\t")[2]
     return id_dict
 
 
@@ -50,10 +50,26 @@ def write_to_csv(mydict, directory):
     with open(directory, 'wb') as csv_file:
         writer = csv.writer(csv_file)
         for key, value in mydict.items():
-            writer.writerow([key, value])
+            writer.writerow([key, value[0]])
 
 def tokenize_tweets(tweet_dict):
+    tokenized_tweets = {}
     tknzr = TweetTokenizer()
+    for k,v in tweet_dict.iteritems():
+        tokenized_tweet = tknzr.tokenize(v)
+        tokenized_tweets[k] = tokenized_tweet
+    return tokenized_tweets
+
+def open_csv():
+    tweet_dict = {}
+    with open('twitter_data.csv') as csvfile:
+        reader = csv.reader(csvfile)
+        for row in reader:
+            tweet_id = row[0]
+            tweet = row[1]
+            tweet_dict[tweet_id] = tweet
+    return tweet_dict
+
 
 def main():
 
@@ -64,12 +80,19 @@ def main():
     #tweet = api.get_status(629186282179153920)
     #print(tweet)
 
+    #dictionary of ids to rating so that you can find the rating of a given tweet
     id_dict = read_file(file_to_read)
     print id_dict
-    tweet_dict = get_tweets_from_id(id_dict)
+
+    #reads the csv file and puts the tweets into a dictionary of tweet_id: tweet
+    tweet_dict = open_csv()
     print tweet_dict
 
-    write_to_csv(tweet_dict, '/Users/amandaivey/PycharmProjects/comp550proj/twitter_data.csv')
+    #tokenized_tweets is a dictionary of tweet_id : tokenized_tweet
+    tokenized_tweets = tokenize_tweets(tweet_dict)
+    print tokenized_tweets
+
+    #write_to_csv(tweet_dict, '/Users/amandaivey/PycharmProjects/comp550proj/twitter_data.csv')
 
 
 if __name__ == '__main__':
