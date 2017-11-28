@@ -17,6 +17,20 @@ auth = tweepy.OAuthHandler(consumer_token, consumer_secret)
 auth.set_access_token(access_token, access_secret)
 file_to_read = sys.argv[1]
 
+'''
+Basic neural network class for a classifier on tweets.
+Requires as input the number of possible tags and the number of possible tokens.
+Source: Tutorial on Deep Learning for NLP on the PyTorch site.
+'''
+class tweetClassifier(nn.Module):
+    def __init__(self, n_tags, n_tokens):
+        super(tweetClassifier, self).__init__()
+        # Parameters
+        self.linear = nn.Linear(n_tokens, n_tags)
+
+    def forward(self, tweet_vec):
+        return F.log_softmax(self.linear(tweet_vec))
+
 #reads a tab delimited text file of the format tweet id, topic, rating
 #and puts this info into a python dict of the form tweetid: rating
 #returns dict
