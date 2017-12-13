@@ -7,16 +7,18 @@ import string
 import nltk
 import csv
 from nltk.tokenize import TweetTokenizer
-from sklearn.feature_extraction import DictVectorizer
-from sklearn.feature_extraction.text import CountVectorizer
-import string
+import torch
+import torch.nn as nn
+from torch.autograd import Variable
+import torch.nn.functional as F
+import torch.optim as optim
+import numpy
 from gensim.models import Word2Vec
 import gensim
-import torch
-import torch.autograd as autograd
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+
 
 consumer_token = "7QclmKZ0uYE1guPPbmqjZ6i8v"
 consumer_secret = "ijFGLclKhx2eOkXrmq0NH1z5cFSjugt97e0x9kCexCbutoFOoc"
@@ -25,9 +27,93 @@ access_secret = "00rtcn0Rwff0FyTbr5xCuvUfplVH8TALeLNktUSqI10ev"
 
 auth = tweepy.OAuthHandler(consumer_token, consumer_secret)
 auth.set_access_token(access_token, access_secret)
-#file_to_read = sys.argv[1]
+file_to_read = sys.argv[1]
 
-punct = string.punctuation
+'''
+Basic neural network class for a classifier on tweets.
+Requires as input the number of possible tags and the number of possible tokens.
+Source: Tutorial on Deep Learning for NLP on the PyTorch site.
+'''
+class tweetClassifier(nn.Module):
+    def __init__(self, n_tags, n_tokens):
+        super(tweetClassifier, self).__init__()
+        # Parameters
+        self.linear = nn.Linear(n_tokens, n_tags)
+
+    def forward(self, tweet_vec):
+        return F.log_softmax(self.linear(tweet_vec))
+
+# NN Functions, similarly from the tutorial
+def make_tweet_vect(tokenized_tweet, token_to_index):
+    vect = torch.zeros(len(token_to_index))
+    for token in tokenized_tweet:
+        vect[token_to_index[token]] += 1
+    return vect.view(1, -1)
+
+def make_target(tag, tag_to_index):
+    return torch.LongTensor([tag_to_index[tag]])
+
+'''
+Given training and test data in the format of a list of tuples of the form (tokenized tweet, tag)
+Returns a dictionary mapping from any given token to the index of its type in the tweet vector.
+'''
+def build_token_indices(training_data, test_data):
+    indices = {}
+    for tweet, _ in training_data+test_data:
+        for token in tweet:
+            if token not in indices:
+                indices[token] = len(indices)
+    return indices
+
+'''
+Takes as input the following:
+    training_data: A list of data in the form of (tokenized tweet, rating).
+    epoches: The number of epoches for which this model will be trained.
+    token_indices: A dictionary containing all possible types in the dataset, which allows one to map 
+        from a token to the location of its type in the tweet vector.
+    tag_indices: A dictionary mapping from any given tag in the dataset to its index in an output vector.
+    loss_function: The loss function used for training.
+    learning_rate: The learning rate used to initialize the model.
+Returns a tweetClassifer model trained to these specifications.
+'''
+def train(training_data, epoches, token_indices, tag_indices, loss_function, learning_rate):
+    model = tweetClassifier(len(tag_indices), len(token_indices))
+    optimizer = optim.SGD(model.parameters(), lr=learning_rate)
+
+    for epoch in range(epoches):
+        for tweet, tag in training_data:
+            # Zero the gradients
+            model.zero_grad()
+
+            # Assemble the vector representation of the tweet and the target
+            tweet_vect = Variable(make_tweet_vect(tweet, token_indices))
+            target = Variable(make_target(tag, tag_indices))
+
+            # Forward pass
+            log_probs = model(tweet_vect)
+
+            # Loss, Grad, update with optimizer
+            loss = loss_function(log_probs, target)
+            loss.backward()
+            optimizer.step()
+    return model
+
+def test(model, test_data, token_indices):
+    for tweet, tag in test_data:
+        tweet_vect = Variable(make_tweet_vect(tweet, token_indices))
+        log_probs = model(tweet_vect)
+        print(log_probs)
+
+def run_example_data():
+    sample_train = [(['I', 'hate', 'pie'],"n"), (['I', 'love', 'cats'],"p"), (['Cake', 'is', 'alright', ':)'],"p")]
+
+    sample_test = [(['I', 'love', 'cake'], "p")]
+
+    tag_to_index = {"n": 0,  "p": 1}
+    tok_indices = build_token_indices(sample_train, sample_test)
+
+    model = train(sample_train, 100, tok_indices, tag_to_index, nn.NLLLoss(), 0.1)
+    test(model, sample_test, tok_indices)
 
 #reads a tab delimited text file of the format tweet id, topic, rating
 #and puts this info into a python dict of the form tweetid: rating
@@ -158,7 +244,7 @@ def main():
     word = ["man", "woman"]
     V_data = model.wv[word]
     V = torch.Tensor(V_data)
-    
+
     tensorize_samples(tokenized_tweets, model)
     print "Three most common words in corpus"
     print(model.wv.index2word[0], model.wv.index2word[1], model.wv.index2word[2])
