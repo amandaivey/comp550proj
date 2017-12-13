@@ -27,7 +27,7 @@ access_secret = "00rtcn0Rwff0FyTbr5xCuvUfplVH8TALeLNktUSqI10ev"
 
 auth = tweepy.OAuthHandler(consumer_token, consumer_secret)
 auth.set_access_token(access_token, access_secret)
-file_to_read = sys.argv[1]
+#file_to_read = sys.argv[1]
 
 '''
 Basic neural network class for a classifier on tweets.
@@ -176,18 +176,11 @@ def generate_corpus(tweet_dict):
     for k,v in tweet_dict.iteritems():
         tweet = ""
         for word in v:
-            no_punc = (word.rstrip(punct))
+            no_punc = (word.rstrip(string.punctuation))
             tweet = tweet + no_punc + " "
             #no_punc = tweet.translate(string.punctuation)
         corpus.append(tweet)
     return corpus
-
-#generates a corpus vector that will be able to be used to generate feature vectors for each tweet sample
-def vectorize_corpus(corpus, tweet_dict):
-    vectorizer = CountVectorizer()
-    #print corpus
-    X = vectorizer.fit_transform(corpus)
-    return X
 
 #returns a list of lists where the outer list is a sample containing a list of tokens in each sample
 def setup_corpus_for_w2v(tokenized_tweets):
@@ -232,24 +225,20 @@ def main():
 
     #write_to_csv(tweet_dict, '/Users/amandaivey/PycharmProjects/comp550proj/twitter_data.csv')
     corpus = generate_corpus(tokenized_tweets)
-    #print corpus
-    vectorize_corpus(corpus, tokenized_tweets)
 
+    #messing around with word to vec
     corpus_for_w2v = setup_corpus_for_w2v(tokenized_tweets)
-
     model = gensim.models.Word2Vec(corpus_for_w2v, min_count=1,size=100,workers=4)
-
     print "Similarity Between Man and Woman: "
     print(model.similarity('man', 'woman'))
     word = ["man", "woman"]
     V_data = model.wv[word]
     V = torch.Tensor(V_data)
-
-    tensorize_samples(tokenized_tweets, model)
     print "Three most common words in corpus"
     print(model.wv.index2word[0], model.wv.index2word[1], model.wv.index2word[2])
-    print punct
 
+    #creates tensors for each tweet, these need to be padded
+    tensors = tensorize_samples(tokenized_tweets, model)
 
 
 if __name__ == '__main__':
