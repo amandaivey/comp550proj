@@ -243,21 +243,21 @@ def main():
 
     #creates tensors for each tweet, these need to be padded
     tensors = tensorize_samples(tokenized_tweets, model)
-    print tensors
-
+    #print tensors
 
     #Creates a baseline SVM classifier, using SVC
     baseline_classifier = svm.SVC()
 
     #Messing around with the nn.LSTM module
     #nn.LSTM(INPUT LAYER SIZE, HIDDEN LAYER SIZE)
-    lstm = nn.LSTM(3, 3)
-    hidden = (Variable(torch.randn(1,1,3)),
-              Variable(torch.randn((1,1,3))))
-    #for t in tensors:
-        #v = Variable(torch.LongTensor(t))
-        #out, hidden = lstm(v.view(1,1,-1), hidden)
-    #print(out)
+    lstm = nn.LSTM(100, 4)
+    hidden = (Variable(torch.randn(1,1,4)),
+              Variable(torch.randn((1,1,4))))
+    for data in tensors:
+        for t in data:
+            v = Variable(t)
+            out, hidden = lstm(v.view(1,1,-1), hidden)
+    print(out)
     #print(hidden)
 
 
