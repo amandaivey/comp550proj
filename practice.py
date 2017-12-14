@@ -198,7 +198,7 @@ def tensorize_samples(tokenized_tweets, model):
     for tweet in tokenized_tweets.itervalues():
         V_data = []
         for word in tweet:
-            V_data.append(model.wv[word])
+            V_data.append(torch.Tensor(model.wv[word]))
         tensors.append(V_data)
     return tensors
 
@@ -227,19 +227,24 @@ def main():
     #write_to_csv(tweet_dict, '/Users/amandaivey/PycharmProjects/comp550proj/twitter_data.csv')
     corpus = generate_corpus(tokenized_tweets)
 
-    #messing around with word to vec
     corpus_for_w2v = setup_corpus_for_w2v(tokenized_tweets)
+
+    #messing word 2 vec
     model = gensim.models.Word2Vec(corpus_for_w2v, min_count=1,size=100,workers=4)
-    print "Similarity Between Man and Woman: "
+    print("Similarity Between Man and Woman: ")
     print(model.similarity('man', 'woman'))
     word = ["man", "woman"]
     V_data = model.wv[word]
-    V = torch.Tensor(V_data)
     print "Three most common words in corpus"
     print(model.wv.index2word[0], model.wv.index2word[1], model.wv.index2word[2])
+    
+    #creates an individual tensor of an individual word
+    #V = torch.Tensor(V_data)
 
     #creates tensors for each tweet, these need to be padded
     tensors = tensorize_samples(tokenized_tweets, model)
+    print tensors
+
 
     #Creates a baseline SVM classifier, using SVC
     baseline_classifier = svm.SVC()
