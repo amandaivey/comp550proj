@@ -18,6 +18,7 @@ import gensim
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from sklearn import svm
 
 
 consumer_token = "7QclmKZ0uYE1guPPbmqjZ6i8v"
@@ -239,6 +240,20 @@ def main():
 
     #creates tensors for each tweet, these need to be padded
     tensors = tensorize_samples(tokenized_tweets, model)
+
+    #Creates a baseline SVM classifier, using SVC
+    baseline_classifier = svm.SVC()
+
+    #Messing around with the nn.LSTM module
+    #nn.LSTM(INPUT LAYER SIZE, HIDDEN LAYER SIZE)
+    lstm = nn.LSTM(3, 3)
+    hidden = (Variable(torch.randn(1,1,3)),
+              Variable(torch.randn((1,1,3))))
+    #for t in tensors:
+        #v = Variable(torch.LongTensor(t))
+        #out, hidden = lstm(v.view(1,1,-1), hidden)
+    #print(out)
+    #print(hidden)
 
 
 if __name__ == '__main__':
