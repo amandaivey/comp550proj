@@ -28,7 +28,29 @@ access_secret = "00rtcn0Rwff0FyTbr5xCuvUfplVH8TALeLNktUSqI10ev"
 
 auth = tweepy.OAuthHandler(consumer_token, consumer_secret)
 auth.set_access_token(access_token, access_secret)
-#file_to_read = sys.argv[1]
+file_to_read = sys.argv[1]
+
+class lstm_sentiment(nn.Module):
+    def __init__(self, embedding_dim, hidden_dim, vocab_size, tagset_size):
+        super(lstm_sentiment, self).__init__()
+        
+        #We will probably need to change this to get it to work correctly with w2v
+        self.word_embeddings = nn.Embedding(vocab_size, embedding_dim)
+
+        self.lstm = nn.LSTM(embedding_dim, hidden_dim)
+        self.hidden2tag = nn.Linear(hidden_dim, tagset_size)
+        self.hidden = self.init_hidden()
+
+    def init_hidden(self):
+        return (Variable(torch.zeros(1,1,self.hidden_dim)),
+                Variable(torch.zeros(1,1,self.hidden_dim)))
+
+    def forward(self, sent):
+        embeds = self.word_embeddings(sent)
+        lstm_out, self.hidden = self.lstm(embeds.view(len(sent), 1, -1), self.hidden)
+        tag_space = self.hidden2tag(lstm_out.view(len(sentence), -1))
+        tag_scores = F.log_softmax(tag_space)
+        return tag_scores
 
 '''
 Basic neural network class for a classifier on tweets.
@@ -77,7 +99,7 @@ Takes as input the following:
     learning_rate: The learning rate used to initialize the model.
 Returns a tweetClassifer model trained to these specifications.
 '''
-def train(training_data, epoches, token_indices, tag_indices, loss_function, learning_rate):
+def train_tc(training_data, epoches, token_indices, tag_indices, loss_function, learning_rate):
     model = tweetClassifier(len(tag_indices), len(token_indices))
     optimizer = optim.SGD(model.parameters(), lr=learning_rate)
 
@@ -113,18 +135,18 @@ def run_example_data():
     tag_to_index = {"n": 0,  "p": 1}
     tok_indices = build_token_indices(sample_train, sample_test)
 
-    model = train(sample_train, 100, tok_indices, tag_to_index, nn.NLLLoss(), 0.1)
+    model = train_tc(sample_train, 100, tok_indices, tag_to_index, nn.NLLLoss(), 0.1)
     test(model, sample_test, tok_indices)
 
 #reads a tab delimited text file of the format tweet id, topic, rating
 #and puts this info into a python dict of the form tweetid: rating
 #returns dict
-def read_file(file_name):
+def read_file(file_name, rating_col):
     id_dict = {}
     with open(file_name, 'r+') as f:
         content = f.readlines()
     for item in content:
-        id_dict[item.strip().split("\t")[0]] = item.strip().split("\t")[2]
+        id_dict[item.strip().split("\t")[0]] = item.strip().split("\t")[rating_col]
     return id_dict
 
 
@@ -133,6 +155,7 @@ def get_tweets_from_id(id_dict):
     num_e = 0
     api = tweepy.API(auth)
     for k,v in id_dict.iteritems():
+        print("Getting tweet ids...")
         try:
             tweet = api.get_status(k)
             text = tweet.text
@@ -202,6 +225,16 @@ def tensorize_samples(tokenized_tweets, model):
         tensors.append(V_data)
     return tensors
 
+def init_baseline(id_to_data, tweet_ratings, rating_to_val):
+    data = []
+    labels = []
+    for k, v in id_to_data.items():
+        data.append(v)
+        labels.append(rating_to_val[tweet_ratings[k]])
+    baseline_clf = svm.SVC()
+    baseline_clf.fit(data, labels)
+    return baseline_clf
+
 
 def main():
 
@@ -213,7 +246,7 @@ def main():
     #print(tweet)
 
     #dictionary of ids to rating so that you can find the rating of a given tweet
-    #id_dict = read_file(file_to_read)
+    id_dict = read_file(file_to_read, 1)
     #print id_dict
 
     #reads the csv file and puts the tweets into a dictionary of tweet_id: tweet
@@ -245,20 +278,24 @@ def main():
     tensors = tensorize_samples(tokenized_tweets, model)
     #print tensors
 
-    #Creates a baseline SVM classifier, using SVC
-    baseline_classifier = svm.SVC()
+    #lab_to_val = {"positive": 1, "negative": -1, "neutral": 0}
+    
+    #Creates a baseline classifier using svc
+    #baseline_classifier = init_baseline(Dictionary from id to word embedding, 
+                                        #dict from id to rating, dict mapping label to value)
 
     #Messing around with the nn.LSTM module
     #nn.LSTM(INPUT LAYER SIZE, HIDDEN LAYER SIZE)
-    lstm = nn.LSTM(100, 4)
-    hidden = (Variable(torch.randn(1,1,4)),
-              Variable(torch.randn((1,1,4))))
-    for data in tensors:
-        for t in data:
-            v = Variable(t)
-            out, hidden = lstm(v.view(1,1,-1), hidden)
-    print(out)
+    #lstm = nn.LSTM(100, 4)
+    #hidden = (Variable(torch.randn(1,1,4)),
+    #          Variable(torch.randn((1,1,4))))
+    #for data in tensors:
+    #    for t in data:
+    #        v = Variable(t)
+    #        out, hidden = lstm(v.view(1,1,-1), hidden)
+    #print(out)
     #print(hidden)
+
 
 
 if __name__ == '__main__':
