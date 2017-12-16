@@ -142,6 +142,7 @@ def full_preprocess(dataset, targets, functions, testsize):
     print(dataset)
     for function in functions:
         dataset = function(dataset)
+    print(dataset)
     m = setup_model(dataset)
     tensorized_data = tensorize(m, dataset)
     return shuffle(tensorized_data, targets, testsize)
@@ -155,8 +156,8 @@ def main():
     d = ['Hi bob builder I am thinking', 'THANKS OBUMMER!!!!!']
     t = [0, -1]
     a, b = full_preprocess(d, t, [tokenize, casing, stops, punctuation, stem_all, pad], .5)
-    print(a)
-    print(b)
+    print(len(a[0][0]))
+    print(len(b[0][0]))
 
 
 if __name__=='__main__':
