@@ -94,6 +94,10 @@ def main():
     tweets = generate_lists_for_training(tweet_dict, rating_dict)[0]
     ratings = generate_lists_for_training(tweet_dict, rating_dict)[1]
 
+    print tweets
+    print ratings
+
+
     padded_tweets = pad_tweets(tweets, max_tweet_length)
 
     print padded_tweets
