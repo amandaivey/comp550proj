@@ -1,6 +1,8 @@
 '''
 @author: Theodore Morley
 A set of functions for preprocessing data before moving it into the model
+TODO IDEAS:
+    Remove URLS
 '''
 
 import numpy
@@ -8,6 +10,7 @@ from sklearn import utils
 from sklearn import model_selection
 from nltk.tokenize import TweetTokenizer
 from nltk.corpus import stopwords
+from nltk.stemmer import PorterStemmer()
 STOPWORDS = set(stopwords.words('english'))
 
 
@@ -28,32 +31,50 @@ def shuffle(data, targets, size_test):
             test_targ.append(targets[test_index])
     return ((train, train_targ), (test, test_targ))
 
+#Over whole dataset
 def tokenize(data):
     toked = []
     tknzr = TweetTokenizer()
     for d in data:
-        toked.append(tknzr[d])
+        toked.append(tknzr(d))
     return toked
 
+#Takes tokenized dataset
 def casing(data):
     lower = []
-    for d in data:
-        lower.append(d.lower())
+    for tweet in data:
+        t = []
+        for word in tweet:
+            t.append(word.lower())
+        lower.append(t)
     return lower
 
+#Takes tokenized dataset
 def stops(data):
     unstoppable = []
-    for d in data:
-        if d not in STOPWORDS:
-            unstoppable.append(d)
+    for tweet in data:
+        t=[]
+        for word in tweet:
+            if word not in STOPWORDS:
+                t.append(d)
+        unstoppable.append(t)
     return unstoppable
 
+#Takes tokenized
 def punctuation(data):
     nopunct = []
-    for d in data:
-        if d not in string.punctuation:
-            nopunct.append(d)
+    for tweet in data:
+        t=[]
+        for word in tweet:
+            if word not in string.punctuation:
+                t.append(word)
+        nopunct.append(t)
     return nopunct
+
+#def stem(data):
+#    stemmed = []
+#    for d in data:
+#        stemmed.append()
 
 '''
 Input:
