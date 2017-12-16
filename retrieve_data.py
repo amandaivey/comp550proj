@@ -47,6 +47,41 @@ def generate_lists_for_training(tweet_dict, rating_dict):
         rating_list.append(rating_dict[k])
     return (tweet_list, rating_list)
 
+def get_tweet_length(tweet):
+    tokens = tweet.split()
+    length = 0
+    for word in tokens:
+        length += 1
+    return length
+
+def pad_tweets(tweets, max_len):
+    padded_tweets = []
+    for tweet in tweets:
+        tokened_tweet = start + " " + tweet
+        length = get_tweet_length(tokened_tweet)
+        padded_tweet = tokened_tweet
+        if length < max_len + 2:
+            while length < max_len + 2:
+                padded_tweet = padded_tweet + " "  + pad
+                #print padded_tweet
+                length += 1
+            padded_tweet = padded_tweet + " " + end
+        else:
+            padded_tweet = padded_tweet + " " + end
+        padded_tweets.append(padded_tweet)
+    return padded_tweets
+
+
+#gets maximum tweet length based on number of words
+def get_max_len(tweet_dict):
+    max_len = 0
+    for tweet in tweet_dict.itervalues():
+        len = 0
+        for word in tweet.split():
+            len += 1
+        if len > max_len:
+            max_len = len
+    return max_len
 
 
 def main():
@@ -55,13 +90,14 @@ def main():
     tweet_dict = open_csv()
     rating_dict = get_rating(file_with_ratings)
 
+    max_tweet_length = get_max_len(tweet_dict)
+
     tweets = generate_lists_for_training(tweet_dict, rating_dict)[0]
     ratings = generate_lists_for_training(tweet_dict, rating_dict)[1]
 
-    print tweets
-    print ratings
+    padded_tweets = pad_tweets(tweets, max_tweet_length)
 
-
+    print padded_tweets
 
 
 if __name__ == '__main__':
