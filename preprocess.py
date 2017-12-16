@@ -7,6 +7,7 @@ import numpy
 from sklearn import utils
 from sklearn import model_selection
 from nltk.tokenize import TweetTokenizer
+from nltk.corpus import stopwords
 
 def shuffle(data, targets, size_test):
     shuffler = model_selection.ShuffleSplit(n_splits = 1, test_size=size_test)
@@ -30,6 +31,26 @@ def tokenize(data):
     for d in data:
         toked.append(tknzr[d])
     return toked
+
+def casing(data):
+    lower = []
+    for d in data:
+        lower.append(d.lower())
+    return lower
+
+def stops(data):
+    unstoppable = []
+    for d in data:
+        if d not in STOPWORDS:
+            unstoppable.append(d)
+    return unstoppable
+
+def punctuation(data):
+    nopunct = []
+    for d in data:
+        if d not in string.punctuation:
+            nopunct.append(d)
+    return nopunct
 
 '''
 Input:
