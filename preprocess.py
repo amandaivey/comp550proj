@@ -5,12 +5,12 @@ TODO IDEAS:
     Remove URLS
 '''
 
+import string
 import numpy
 from sklearn import utils
 from sklearn import model_selection
 from nltk.tokenize import TweetTokenizer
 from nltk.corpus import stopwords
-from nltk.stemmer import PorterStemmer()
 STOPWORDS = set(stopwords.words('english'))
 
 
@@ -36,7 +36,7 @@ def tokenize(data):
     toked = []
     tknzr = TweetTokenizer()
     for d in data:
-        toked.append(tknzr(d))
+        toked.append(tknzr.tokenize(d))
     return toked
 
 #Takes tokenized dataset
@@ -56,7 +56,7 @@ def stops(data):
         t=[]
         for word in tweet:
             if word not in STOPWORDS:
-                t.append(d)
+                t.append(word)
         unstoppable.append(t)
     return unstoppable
 
@@ -93,6 +93,11 @@ def main():
     tr, te = shuffle(X, Y, 0.5)
     print(tr)
     print(te)
+    d = ['Hi bob builder', 'THANKS OBUMMER !!!!!']
+    t = [0, -1]
+    a, b = full_preprocess(d, t, [tokenize, casing, stops, punctuation], .5)
+    print(a)
+    print(b)
 
 if __name__=='__main__':
     main()
