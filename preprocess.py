@@ -8,6 +8,9 @@ from sklearn import utils
 from sklearn import model_selection
 from nltk.tokenize import TweetTokenizer
 from nltk.corpus import stopwords
+STOPWORDS = set(stopwords.words('english'))
+
+
 
 def shuffle(data, targets, size_test):
     shuffler = model_selection.ShuffleSplit(n_splits = 1, test_size=size_test)
