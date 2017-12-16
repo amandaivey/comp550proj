@@ -11,6 +11,7 @@ from sklearn import utils
 from sklearn import model_selection
 from nltk.tokenize import TweetTokenizer
 from nltk.corpus import stopwords
+from nltk import stem
 STOPWORDS = set(stopwords.words('english'))
 
 
@@ -71,10 +72,15 @@ def punctuation(data):
         nopunct.append(t)
     return nopunct
 
-#def stem(data):
-#    stemmed = []
-#    for d in data:
-#        stemmed.append()
+def stem_all(data):
+    stemmed = []
+    stemmer = stem.PorterStemmer()
+    for tweet in data:
+        t=[]
+        for word in tweet:
+            t.append(stemmer.stem(word))
+        stemmed.append(t)
+    return stemmed
 
 '''
 Input:
@@ -93,11 +99,13 @@ def main():
     tr, te = shuffle(X, Y, 0.5)
     print(tr)
     print(te)
-    d = ['Hi bob builder', 'THANKS OBUMMER !!!!!']
+    d = ['Hi bob builder I am thinking', 'THANKS OBUMMER!!!!! <pad>']
     t = [0, -1]
-    a, b = full_preprocess(d, t, [tokenize, casing, stops, punctuation], .5)
+    a, b = full_preprocess(d, t, [tokenize, casing, stops, punctuation, stem_all], .5)
     print(a)
     print(b)
+    stemmer = stem.PorterStemmer()
+    print(stemmer.stem('Thinking'))
 
 if __name__=='__main__':
     main()
