@@ -87,7 +87,7 @@ def stem_all(data):
 #takes tokenized
 def get_max_len(data):
     max_len = 0
-    for tweet in data():
+    for tweet in data:
         len = 0
         for word in tweet:
             len += 1
@@ -139,23 +139,25 @@ Input:
 output: The output of shuffling the dataset and targets into a train and test set determined by testsize
 '''
 def full_preprocess(dataset, targets, functions, testsize):
+    print(dataset)
     for function in functions:
         dataset = function(dataset)
-    return shuffle(dataset, targets, testsize)
+    m = setup_model(dataset)
+    tensorized_data = tensorize(m, dataset)
+    return shuffle(tensorized_data, targets, testsize)
 
 def main():
     X = [[0,0,1],[1,1,0]]
     Y = [0, 1]
     tr, te = shuffle(X, Y, 0.5)
-    print(tr)
-    print(te)
-    d = ['Hi bob builder I am thinking', 'THANKS OBUMMER!!!!! <pad>']
+    #print(tr)
+    #print(te)
+    d = ['Hi bob builder I am thinking', 'THANKS OBUMMER!!!!!']
     t = [0, -1]
-    a, b = full_preprocess(d, t, [tokenize, casing, stops, punctuation, stem_all], .5)
+    a, b = full_preprocess(d, t, [tokenize, casing, stops, punctuation, stem_all, pad], .5)
     print(a)
     print(b)
-    stemmer = stem.PorterStemmer()
-    print(stemmer.stem('Thinking'))
+
 
 if __name__=='__main__':
     main()
