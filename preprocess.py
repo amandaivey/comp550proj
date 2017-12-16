@@ -108,11 +108,11 @@ def pad(data):
         padded_tweet = add_start
         if length < max_len + 2:
             while length < max_len + 2:
-                padded_tweet = padded_tweet + " " + pad
+                padded_tweet = padded_tweet.append(pad)
                 length += 1
-            padded_tweet = padded_tweet + " " + end
+            padded_tweet = padded_tweet.append(end)
         else:
-            padded_tweet = padded_tweet + " " + end
+            padded_tweet = padded_tweet.append(end)
         padded_tweets.append(padded_tweet)
     return padded_tweets
 
