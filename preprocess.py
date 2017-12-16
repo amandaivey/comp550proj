@@ -56,12 +56,12 @@ def punctuation(data):
 Input:
     dataset: Iterable containing all the data to be trained on
     targets: Indexed iterable matching ratings/targets to the datapoints in dataset
-output:
-    data: Same as above, but tokenized, shuffled, etc
-    targs: Same as above
+output: The output of shuffling the dataset and targets into a train and test set determined by testsize
 '''
-def full_preprocess(dataset, targets):
-    return True
+def full_preprocess(dataset, targets, functions, testsize):
+    for function in functions:
+        dataset = function(dataset)
+    return shuffle(dataset, targets, testsize)
 
 def main():
     X = [[0,0,1],[1,1,0]]
