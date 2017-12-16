@@ -27,8 +27,7 @@ def open_csv():
         for row in reader:
             tweet_id = row[0]
             tweet = row[1]
-            no_punc = tweet.translate(None, string.punctuation)
-            tweet_dict[tweet_id] = no_punc.lower()
+            tweet_dict[tweet_id] = tweet
     return tweet_dict
 
 def tokenize_tweets(tweet_dict):

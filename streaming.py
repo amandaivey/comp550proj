@@ -9,7 +9,7 @@ access_token = "31629716-JuJrXypLiNUTHxHw4sZIOzHcBoymJLWQDh3e7Mq4p"
 access_secret = "00rtcn0Rwff0FyTbr5xCuvUfplVH8TALeLNktUSqI10ev"
 
 FILTER = "Kevin Spacey"
-OUTPUT = "sys out"
+OUTPUT = "json"
 
 #send to json file
 class MyListener(StreamListener):
@@ -29,7 +29,7 @@ class MyListener(StreamListener):
 #send to standard out
 class StdOutListener(StreamListener):
     def on_data(self, data):
-        print(data[0])
+        print(data)
         return True
 
     def on_error(self, status):

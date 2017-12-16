@@ -7,6 +7,8 @@ TODO IDEAS:
 
 import string
 import numpy
+import gensim
+import torch
 from sklearn import utils
 from sklearn import model_selection
 from nltk.tokenize import TweetTokenizer
@@ -81,6 +83,54 @@ def stem_all(data):
             t.append(stemmer.stem(word))
         stemmed.append(t)
     return stemmed
+
+#takes tokenized
+def get_max_len(data):
+    max_len = 0
+    for tweet in data():
+        len = 0
+        for word in tweet:
+            len += 1
+        if len > max_len:
+            max_len = len
+    return max_len
+
+#takes tokenized
+def pad(data):
+    start = "<start>"
+    end = "<end>"
+    pad = "<pad>"
+    max_len = get_max_len(data)
+    padded_tweets = []
+    for tweet in data:
+        length = len(tweet)
+        add_start = tweet.insert(0, start)
+        padded_tweet = add_start
+        if length < max_len + 2:
+            while length < max_len + 2:
+                padded_tweet = padded_tweet + " " + pad
+                length += 1
+            padded_tweet = padded_tweet + " " + end
+        else:
+            padded_tweet = padded_tweet + " " + end
+        padded_tweets.append(padded_tweet)
+    return padded_tweets
+
+#takes tokenized data
+def setup_model(data):
+    model = gensim.models.Word2Vec(data, min_count=1, size=100, workers=4)
+    return model
+
+def tensorize(model, data):
+    tensors = []
+    max_length = 0
+    for tweet in data:
+        V_data = []
+        for word in tweet:
+            V_data.append(torch.Tensor(model.wv[word]))
+        tensors.append(V_data)
+    return tensors
+
 
 '''
 Input:
