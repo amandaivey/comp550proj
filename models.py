@@ -1,6 +1,7 @@
 '''
 Model setups
 '''
+import retrieve_data
 from sklearn import svm
 import preprocess
 import numpy as np
@@ -105,9 +106,19 @@ def basic_nn(trainSamples, trainTags, testSamples, testTags, embed_size, epoc):
     return score
 
 def main():
+    tweet_dict = retrieve_data.open_csv()
+    rating_dict = retrieve_data.get_rating('2download/gold/train/100_topics_100_tweets.sentence-three-point.subtask-A.train.gold.txt')
+    for id in tweet_dict.keys():
+        if id in rating_dict:
+            print("in it fam")
+    alldata = retrieve_data.generate_lists_for_training(tweet_dict, rating_dict)
+    tweets = alldata[0]
+    ratings = alldata[1]
+    print(tweets)
+    print(ratings)
     d = ['Hi bob builder I am thinking', 'THANKS OBUMMER!!!!!']
     t = [0, -1]
-    a, b = preprocess.full_preprocess(d, t, 
+    a, b = preprocess.full_preprocess(tweets, ratings, 
             [preprocess.tokenize, preprocess.casing, preprocess.stops,
                 preprocess.punctuation, preprocess.stem_all], .2)
     print(len(a[0][0]))
