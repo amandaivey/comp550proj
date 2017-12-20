@@ -6,7 +6,7 @@ TODO IDEAS:
 '''
 
 import string
-import numpy
+import numpy as np
 import gensim
 import torch
 from sklearn import utils
@@ -14,6 +14,11 @@ from sklearn import model_selection
 from nltk.tokenize import TweetTokenizer
 from nltk.corpus import stopwords
 from nltk import stem
+from keras.preprocessing.sequence import pad_sequences
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers import Flatten
+from keras.layers.embeddings import Embedding
 STOPWORDS = set(stopwords.words('english'))
 
 
@@ -143,9 +148,50 @@ def full_preprocess(dataset, targets, functions, testsize):
     for function in functions:
         dataset = function(dataset)
     print(dataset)
-    m = setup_model(dataset)
-    tensorized_data = tensorize(m, dataset)
-    return shuffle(tensorized_data, targets, testsize)
+    #m = setup_model(dataset)
+    #tensorized_data = tensorize(m, dataset)
+    return shuffle(dataset, targets, testsize)
+
+def word2ix(all_samples):
+    translator = dict()
+    for sentence in all_samples:
+        for word in sentence:
+            if word not in translator:
+                translator[word] = len(translator)
+    return translator
+
+def encodeSample(sample, embed_dict):
+    out = []
+    for word in sample:
+        out.append(embed_dict[word])
+    return out
+
+# Testing NN
+def basic_nn(trainSamples, trainTags, testSamples, testTags, embed_size, epoc):
+    # First set up word to index encoding
+    word_to_index = word2ix(trainSamples)
+    # Create encoded list of samples
+    encoded_samples = [encodeSample(s, word_to_index) for s in trainSamples]
+    # pad all samples
+    maximum_length = max(get_max_len(trainSamples), get_max_len(testSamples))
+    padded = pad_sequences(encoded_samples, maxlen = maximum_length, padding = 'post')
+    # define the model
+    model = Sequential()
+    model.add(Embedding(len(word_to_index), embed_size, input_length=maximum_length))
+    model.add(Flatten())
+    model.add(Dense(1, activation='sigmoid'))
+    # compile
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['acc'])
+    # fit model
+    trainTags=np.asarray(trainTags)
+    model.fit(padded, trainTags, epochs=epoc, verbose=0)
+    # prepare test data
+    testWord_to_ix = word2ix(testSamples)
+    encoded_test = [encodeSample(s, testWord_to_ix) for s in testSamples]
+    padded_test = pad_sequences(encoded_test, maxlen = maximum_length, padding = 'post')
+    # test
+    score = model.evaluate(padded, trainTags, verbose=0)#padded_test, testTags, verbose=0)
+    return score
 
 def main():
     X = [[0,0,1],[1,1,0]]
@@ -155,9 +201,10 @@ def main():
     #print(te)
     d = ['Hi bob builder I am thinking', 'THANKS OBUMMER!!!!!']
     t = [0, -1]
-    a, b = full_preprocess(d, t, [tokenize, casing, stops, punctuation, stem_all, pad], .5)
+    a, b = full_preprocess(d, t, [tokenize, casing, stops, punctuation, stem_all], .5)
     print(len(a[0][0]))
     print(len(b[0][0]))
+    print(basic_nn(a[0], a[1], b[0], b[1], 12, 300))
 
 
 if __name__=='__main__':
