@@ -153,6 +153,17 @@ def batch_grab(writefile, batches, ratinglookup, translateRating):
         count+=1
     fw.close()
 
+def genLists(filename):
+    f = open(filename, "r")
+    samples = []
+    targets = []
+    for line in f:
+        s, t = line.split("|")
+        samples.append(s)
+        targets.append(t)
+    f.close()
+    return (samples, targets)
+
 def main():
 
     #reads the csv file and puts the tweets into a dictionary of tweet_id: tweet

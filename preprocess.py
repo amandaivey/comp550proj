@@ -144,10 +144,10 @@ Input:
 output: The output of shuffling the dataset and targets into a train and test set determined by testsize
 '''
 def full_preprocess(dataset, targets, functions, testsize):
-    print(dataset)
+    #print(dataset)
     for function in functions:
         dataset = function(dataset)
-    print(dataset)
+    #print(dataset)
     #m = setup_model(dataset)
     #tensorized_data = tensorize(m, dataset)
     return shuffle(dataset, targets, testsize)

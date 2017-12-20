@@ -85,7 +85,7 @@ def basic_nn(trainSamples, trainTags, testSamples, testTags, embed_size, epoc):
     # Create encoded list of samples
     encoded_samples = [encodeSample(s, word_to_index) for s in trainSamples]
     # pad all samples
-    maximum_length = max(get_max_len(trainSamples), get_max_len(testSamples))
+    maximum_length = max(preprocess.get_max_len(trainSamples), preprocess.get_max_len(testSamples))
     padded = pad_sequences(encoded_samples, maxlen = maximum_length, padding = 'post')
     # define the model
     model = Sequential()
@@ -102,27 +102,26 @@ def basic_nn(trainSamples, trainTags, testSamples, testTags, embed_size, epoc):
     encoded_test = [encodeSample(s, testWord_to_ix) for s in testSamples]
     padded_test = pad_sequences(encoded_test, maxlen = maximum_length, padding = 'post')
     # test
-    score = model.evaluate(padded, trainTags, verbose=0)#padded_test, testTags, verbose=0)
+    score = model.evaluate(padded_test, testTags, verbose=1)
     return score
 
 def main():
-    tweet_dict = retrieve_data.open_csv()
-    rating_dict = retrieve_data.get_rating('2download/gold/train/100_topics_100_tweets.sentence-three-point.subtask-A.train.gold.txt')
-    for id in tweet_dict.keys():
-        if id in rating_dict:
-            print("in it fam")
-    alldata = retrieve_data.generate_lists_for_training(tweet_dict, rating_dict)
+    #tweet_dict = retrieve_data.open_csv()
+    #rating_dict = retrieve_data.get_rating('2download/gold/train/100_topics_100_tweets.sentence-three-point.subtask-A.train.gold.txt')
+    #for id in tweet_dict.keys():
+    #    if id in rating_dict:
+    #        print("in it fam")
+    alldata = retrieve_data.genLists('diffsep-mydata.csv')
     tweets = alldata[0]
     ratings = alldata[1]
-    print(tweets)
-    print(ratings)
-    d = ['Hi bob builder I am thinking', 'THANKS OBUMMER!!!!!']
-    t = [0, -1]
+    #d = ['Hi bob builder I am thinking', 'THANKS OBUMMER!!!!!']
+    #t = [0, -1]
     a, b = preprocess.full_preprocess(tweets, ratings, 
             [preprocess.tokenize, preprocess.casing, preprocess.stops,
                 preprocess.punctuation, preprocess.stem_all], .2)
     print(len(a[0][0]))
     print(len(b[0][0]))
+    print(basic_nn(a[0], a[1], b[0], b[1], 12, 50))
    # model1 = Sequential([
    ##         Dense(32, input_shape = (784,)),
    #         Activation('relu'),
