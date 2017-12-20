@@ -2,8 +2,17 @@ import csv
 import string
 import nltk
 from nltk import TweetTokenizer
+from tweepy import Stream
+from tweepy import OAuthHandler
+from tweepy.streaming import StreamListener
+import tweepy
 
-file_with_ratings = "/Users/amandaivey/PycharmProjects/comp550proj/2download/gold/dev/100_topics_100_tweets.sentence-three-point.subtask-A.dev.gold.txt"
+consumer_token = "7QclmKZ0uYE1guPPbmqjZ6i8v"
+consumer_secret = "ijFGLclKhx2eOkXrmq0NH1z5cFSjugt97e0x9kCexCbutoFOoc"
+access_token = "31629716-JuJrXypLiNUTHxHw4sZIOzHcBoymJLWQDh3e7Mq4p"
+access_secret = "00rtcn0Rwff0FyTbr5xCuvUfplVH8TALeLNktUSqI10ev"
+
+#file_with_ratings = "/Users/amandaivey/PycharmProjects/comp550proj/2download/gold/dev/100_topics_100_tweets.sentence-three-point.subtask-A.dev.gold.txt"
 
 start = "<start>"
 end = "<end>"
@@ -11,7 +20,7 @@ pad = "<pad>"
 
 def get_rating(file_w_ratings):
     rating_dict = {}
-    with open(file_with_ratings) as csvfile:
+    with open(file_w_ratings) as csvfile:
         reader = csv.reader(csvfile)
         for row in reader:
             tweet = row[0].split()
@@ -82,25 +91,33 @@ def get_max_len(tweet_dict):
             max_len = len
     return max_len
 
+def gather_tweets(filepath):
+    tweet_to_rating = dict()
+    f = open(filepath, 'r')
+    for line in f:
+        tweet_id, rating = line.split()
+        tweet = 
+    return tweet_to_rating
+
 
 def main():
 
     #reads the csv file and puts the tweets into a dictionary of tweet_id: tweet
     tweet_dict = open_csv()
-    rating_dict = get_rating(file_with_ratings)
+    #rating_dict = get_rating(file_with_ratings)
 
     max_tweet_length = get_max_len(tweet_dict)
 
-    tweets = generate_lists_for_training(tweet_dict, rating_dict)[0]
-    ratings = generate_lists_for_training(tweet_dict, rating_dict)[1]
+    #tweets = generate_lists_for_training(tweet_dict, rating_dict)[0]
+    #ratings = generate_lists_for_training(tweet_dict, rating_dict)[1]
 
-    print tweets
-    print ratings
+    #print tweets
+    #print ratings
 
 
-    padded_tweets = pad_tweets(tweets, max_tweet_length)
+    #padded_tweets = pad_tweets(tweets, max_tweet_length)
 
-    print padded_tweets
+    #print padded_tweets
 
 
 if __name__ == '__main__':
