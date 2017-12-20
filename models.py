@@ -3,11 +3,20 @@ Model setups
 '''
 from sklearn import svm
 import preprocess
+import numpy as np
 import torch
 import torch.autograd as autograd
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from keras.models import Sequential
+from keras.layers import Dense, Activation
+from keras.layers.convolutional import Conv3D
+from keras.layers.convolutional_recurrent import ConvLSTM2D
+from keras.layers.normalization import BatchNormalization
+from keras.preprocessing.sequence import pad_sequences
+from keras.layers import Flatten
+from keras.layers.embeddings import Embedding
 
 class lstm_sentiment(nn.Module):
     def __init__(self, embedding_dim, hidden_dim, vocab_size, tagset_size):
@@ -53,14 +62,77 @@ def train_lstm(data, targets, loss_function, input_len, vocab_n, tag_n, epoches)
             optimizer.step()
     return model
 
+
+def word2ix(all_samples):
+    translator = dict()
+    for sentence in all_samples:
+        for word in sentence:
+            if word not in translator:
+                translator[word] = len(translator)
+    return translator
+
+def encodeSample(sample, embed_dict):
+    out = []
+    for word in sample:
+        out.append(embed_dict[word])
+    return out
+
+
+def basic_nn(trainSamples, trainTags, testSamples, testTags, embed_size, epoc):
+    # First set up word to index encoding
+    word_to_index = word2ix(trainSamples)
+    # Create encoded list of samples
+    encoded_samples = [encodeSample(s, word_to_index) for s in trainSamples]
+    # pad all samples
+    maximum_length = max(get_max_len(trainSamples), get_max_len(testSamples))
+    padded = pad_sequences(encoded_samples, maxlen = maximum_length, padding = 'post')
+    # define the model
+    model = Sequential()
+    model.add(Embedding(len(word_to_index), embed_size, input_length=maximum_length))
+    model.add(Flatten())
+    model.add(Dense(1, activation='sigmoid'))
+    # compile
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['acc'])
+    # fit model
+    trainTags=np.asarray(trainTags)
+    model.fit(padded, trainTags, epochs=epoc, verbose=0)
+    # prepare test data
+    testWord_to_ix = word2ix(testSamples)
+    encoded_test = [encodeSample(s, testWord_to_ix) for s in testSamples]
+    padded_test = pad_sequences(encoded_test, maxlen = maximum_length, padding = 'post')
+    # test
+    score = model.evaluate(padded, trainTags, verbose=0)#padded_test, testTags, verbose=0)
+    return score
+
 def main():
     d = ['Hi bob builder I am thinking', 'THANKS OBUMMER!!!!!']
     t = [0, -1]
     a, b = preprocess.full_preprocess(d, t, 
             [preprocess.tokenize, preprocess.casing, preprocess.stops,
-                preprocess.punctuation, preprocess.stem_all, preprocess.pad], .5)
+                preprocess.punctuation, preprocess.stem_all], .2)
     print(len(a[0][0]))
     print(len(b[0][0]))
+   # model1 = Sequential([
+   ##         Dense(32, input_shape = (784,)),
+   #         Activation('relu'),
+   #         Dense(10),
+   #         Activation('softmax'),
+   #     ])
+    # For a single-input model with 2 classes (binary classification):
+
+   # model = Sequential()
+   # model.add(Dense(32, activation='relu', input_dim=100))
+   # model.add(Dense(1, activation='sigmoid'))
+   # model.compile(optimizer='rmsprop',
+   #                 loss='binary_crossentropy',
+   #                 metrics=['accuracy'])
+
+    # Generate dummy data
+    #data = np.random.random((1000, 100))
+    #labels = np.random.randint(2, size=(1000, 1))
+
+    # Train the model, iterating on the data in batches of 32 samples
+    #model.fit(data, labels, epochs=10, batch_size=32)
     #print(a[0][0])
     #lstm = nn.LSTM(len(a[0][0]), 3)
     #torched = autograd.Variable(torch.Tensor(a[0][0]))
