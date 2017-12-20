@@ -96,7 +96,7 @@ def get_max_len(tweet_dict):
 
 def gather_tweets(ratingTranslate, filepath):
     tweet_to_rating = dict()
-    api = tweepy.API(auth)
+    api = tweepy.API(auth, wait_on_rate_limit=True)
     f = open(filepath, 'r')
     errors = 0
     for line in f:
@@ -112,6 +112,7 @@ def gather_tweets(ratingTranslate, filepath):
             errors+=1
             print(errors)
             print(e)
+    f.close()
     return tweet_to_rating
 
 def write_dict_to_csv(dictToWrite, filename):
@@ -120,6 +121,36 @@ def write_dict_to_csv(dictToWrite, filename):
         f.write(k+","+v+"\n")
     print("File written")
 
+
+def assembleBatches(readfile):
+    fr = open(readfile, "r")
+    fullList = []
+    ratingLookUp = dict()
+    for line in fr:
+        tweet_id, rating = line.split()
+        fullList.append((tweet_id, rating))
+        ratingLookUp[tweet_id] = rating
+    chunks = [fullList[x:x+100] for x in xrange(0, len(fullList), 100)]
+    fr.close()
+    return (chunks, ratingLookUp)
+
+def batch_grab(writefile, batches, ratinglookup, translateRating):
+    fw = open(writefile, "w")
+    api = tweepy.API(auth, wait_on_rate_limit=True)
+    count = 0
+    for batch in batches:
+        ids, ratings = zip(*batch)
+        idsToWrite = api.statuses_lookup(ids)
+        print(len(idsToWrite))
+        for obj in idsToWrite:
+            if obj.text == None:# or obj.id not in ratinglookup:
+                print('dead tweet encountered')
+                pass
+            else:
+                fw.write(str(obj.text)+","+str(translateRating[ratinglookup[obj.id_str]])+"\n")
+        print(count)
+        count+=1
+    fw.close()
 
 def main():
 
@@ -137,8 +168,17 @@ def main():
 
     ratingT = {'positive':1, 'negative':-1, 'neutral':0}
 
-    ttr = gather_tweets(ratingT, '2download/gold/train/100_topics_100_tweets.sentence-three-point.subtask-A.train.gold.txt')
-    write_dict_to_csv(ttr, "myratings.csv")
+    #ttr = gather_tweets(ratingT, '2download/gold/train/100_topics_100_tweets.sentence-three-point.subtask-A.train.gold.txt')
+    #write_dict_to_csv(ttr, "myratings.csv")
+
+    # Batch version
+    # Make a list of lists
+    # inner lists consist of 100 tuples each consisting of the form (id, rating)
+    # Then fetch ids using batch lookup which fetches 100 at a time, setting 'map' to true to return None objects for errors
+    # Continuously write each one to a csv as they are grabbed
+    batches, ratinglook = assembleBatches('2download/gold/train/100_topics_100_tweets.sentence-three-point.subtask-A.train.gold.txt')
+    batch_grab('mydata.csv', batches, ratinglook, ratingT)
+
 
     #padded_tweets = pad_tweets(tweets, max_tweet_length)
 
