@@ -12,6 +12,9 @@ consumer_secret = "ijFGLclKhx2eOkXrmq0NH1z5cFSjugt97e0x9kCexCbutoFOoc"
 access_token = "31629716-JuJrXypLiNUTHxHw4sZIOzHcBoymJLWQDh3e7Mq4p"
 access_secret = "00rtcn0Rwff0FyTbr5xCuvUfplVH8TALeLNktUSqI10ev"
 
+auth = tweepy.OAuthHandler(consumer_token, consumer_secret)
+auth.set_access_token(access_token, access_secret)
+
 #file_with_ratings = "/Users/amandaivey/PycharmProjects/comp550proj/2download/gold/dev/100_topics_100_tweets.sentence-three-point.subtask-A.dev.gold.txt"
 
 start = "<start>"
@@ -91,13 +94,31 @@ def get_max_len(tweet_dict):
             max_len = len
     return max_len
 
-def gather_tweets(filepath):
+def gather_tweets(ratingTranslate, filepath):
     tweet_to_rating = dict()
+    api = tweepy.API(auth)
     f = open(filepath, 'r')
+    errors = 0
     for line in f:
-        tweet_id, rating = line.split()
-        tweet = 
+        try:
+            tweet_id, rating = line.split()
+            tweet = api.get_status(tweet_id).text
+            tweet_to_rating[tweet] = ratingTranslate[rating]
+            print(tweet)
+            print(rating)
+            print("**************")
+        except tweepy.TweepError, e:
+            pass
+            errors+=1
+            print(errors)
+            print(e)
     return tweet_to_rating
+
+def write_dict_to_csv(dictToWrite, filename):
+    f = open(filename, 'w')
+    for k, v in dictToWrite.items():
+        f.write(k+","+v+"\n")
+    print("File written")
 
 
 def main():
@@ -114,6 +135,10 @@ def main():
     #print tweets
     #print ratings
 
+    ratingT = {'positive':1, 'negative':-1, 'neutral':0}
+
+    ttr = gather_tweets(ratingT, '2download/gold/train/100_topics_100_tweets.sentence-three-point.subtask-A.train.gold.txt')
+    write_dict_to_csv(ttr, "myratings.csv")
 
     #padded_tweets = pad_tweets(tweets, max_tweet_length)
 
