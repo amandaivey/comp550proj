@@ -151,7 +151,7 @@ def main():
     #for id in tweet_dict.keys():
     #    if id in rating_dict:
     #        print("in it fam")
-    alldata = retrieve_data.genLists('diffsep-mydata.csv')
+    alldata = retrieve_data.genLists('binary-diffsep-mydata.csv')
     tweets = alldata[0]
     ratings = alldata[1]
     #d = ['Hi bob builder I am thinking', 'THANKS OBUMMER!!!!!']
@@ -161,8 +161,8 @@ def main():
                 preprocess.punctuation, preprocess.stem_all], .2)
     print(len(a[0][0]))
     print(len(b[0][0]))
-    #print("\n"+str(basic_nn(a[0], a[1], b[0], b[1], 24, 300)))
-    print("\n"+str(convNN(a[0], a[1], b[0], b[1], 300, 300)))
+    print("\n"+str(basic_nn(a[0], a[1], b[0], b[1], 24, 300)))
+    #print("\n"+str(convNN(a[0], a[1], b[0], b[1], 24, 300)))
    # model1 = Sequential([
    ##         Dense(32, input_shape = (784,)),
    #         Activation('relu'),

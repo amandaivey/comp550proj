@@ -122,6 +122,19 @@ def write_dict_to_csv(dictToWrite, filename):
     print("File written")
 
 
+def assembleBinaryBatches(readfile):
+    fr = open(readfile, 'r')
+    fullList = []
+    ratingLookUp = dict()
+    for line in fr:
+        tweet_id, _, rating = line.split("\t")
+        rating = rating.strip()
+        fullList.append((tweet_id, rating))
+        ratingLookUp[tweet_id] = rating
+    chunks = [fullList[x:x+100] for x in xrange(0, len(fullList), 100)]
+    fr.close()
+    return (chunks, ratingLookUp)
+
 def assembleBatches(readfile):
     fr = open(readfile, "r")
     fullList = []
@@ -188,8 +201,8 @@ def main():
     # inner lists consist of 100 tuples each consisting of the form (id, rating)
     # Then fetch ids using batch lookup which fetches 100 at a time, setting 'map' to true to return None objects for errors
     # Continuously write each one to a csv as they are grabbed
-    batches, ratinglook = assembleBatches('2download/gold/train/100_topics_100_tweets.sentence-three-point.subtask-A.train.gold.txt')
-    batch_grab('diffsep-mydata.csv', batches, ratinglook, ratingT)
+    batches, ratinglook = assembleBinaryBatches('2download/gold/train/100_topics_XXX_tweets.topic-two-point.subtask-BD.train.gold.txt')
+    batch_grab('binary-diffsep-mydata.csv', batches, ratinglook, ratingT)
 
 
     #padded_tweets = pad_tweets(tweets, max_tweet_length)
