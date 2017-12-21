@@ -147,10 +147,22 @@ def batch_grab(writefile, batches, ratinglookup, translateRating):
                 print('dead tweet encountered')
                 pass
             else:
-                fw.write(str(obj.text)+","+str(translateRating[ratinglookup[obj.id_str]])+"\n")
+                text = [char for char in obj.text if char != "|" and char != "\n"]
+                fw.write(''.join(text)+"|"+str(translateRating[ratinglookup[obj.id_str]])+"\n")
         print(count)
         count+=1
     fw.close()
+
+def genLists(filename):
+    f = open(filename, "r")
+    samples = []
+    targets = []
+    for line in f:
+        s, t = line.split("|")
+        samples.append(s)
+        targets.append(t)
+    f.close()
+    return (samples, targets)
 
 def main():
 
@@ -177,7 +189,7 @@ def main():
     # Then fetch ids using batch lookup which fetches 100 at a time, setting 'map' to true to return None objects for errors
     # Continuously write each one to a csv as they are grabbed
     batches, ratinglook = assembleBatches('2download/gold/train/100_topics_100_tweets.sentence-three-point.subtask-A.train.gold.txt')
-    batch_grab('mydata.csv', batches, ratinglook, ratingT)
+    batch_grab('diffsep-mydata.csv', batches, ratinglook, ratingT)
 
 
     #padded_tweets = pad_tweets(tweets, max_tweet_length)
