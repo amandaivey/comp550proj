@@ -20,13 +20,9 @@ from sklearn.naive_bayes import BernoulliNB
 import pandas as pd
 from sklearn import cross_validation
 
-csv_file = "/Users/amandaivey/PycharmProjects/comp550proj/apple_data.csv"
+csv_file = "/Users/amandaivey/PycharmProjects/comp550proj/apple_data_2.csv"
 
-NUMBER_OF_FEATS = 3000
-REMOVE_STOP_WORDS = False
-REMOVE_PUNCT = True
-
-
+NUMBER_OF_FEATS = 500
 STOPWORDS = set(stopwords.words('english'))
 
 #Over whole dataset
@@ -78,7 +74,7 @@ def stem_all(data):
         stemmed.append(t)
     return stemmed
 
-FUNCTIONS = [tokenize, casing, punctuation]
+FUNCTIONS = [tokenize, casing, punctuation, stem_all, stops]
 
 def setup_corpus(data):
     for f in FUNCTIONS:
@@ -115,7 +111,10 @@ def generate_data_vectors(pre_processed_data, corpus_dict):
         for word in review[0]:
             if word in corpus_dict:
                 temp_vector[corpus_dict.keys().index(word)] = 1
-        vector_list.append((temp_vector, review[1]))
+        try:
+            vector_list.append((temp_vector, (review[1])))
+        except ValueError:
+            continue
 
     return vector_list
 
@@ -136,9 +135,7 @@ def test_model(classifier):
     y = np.array(df.ix[:, 1])
     corpus_dict = setup_corpus(x)
     preproc_data = preprocess_features(x, y, corpus_dict)
-
     vector = generate_data_vectors(preproc_data, corpus_dict)
-
     x_data = []
     y_data = []
     for data in vector:
@@ -149,16 +146,14 @@ def test_model(classifier):
 
     if classifier == "svm":
         clf = svm.SVC(kernel='linear')
-        clf.fit(X_train, y_train)
-        predictions = clf.predict(X_test)
-        print "Average SVM accuracy: {}".format(get_accuracy(y_test, predictions))
+    else:
+        clf = BernoulliNB()
 
-    if classifier == "bayes":
-        clf_bayes = BernoulliNB()
-        clf_bayes.fit(X_train, y_train)
-        predictions_bayes = clf_bayes.predict(X_test)
-        print "Average Bayes accuracy: {}".format(get_accuracy(y_test, predictions_bayes))
-
+    clf.fit(X_train, y_train)
+    predictions = clf.predict(X_test)
+    accuracy = (get_accuracy(y_test, predictions))
+    print "Average " + classifier + " accuracy: {}".format(accuracy)
+    return accuracy
 
 def main():
     test_model("svm")
