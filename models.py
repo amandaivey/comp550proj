@@ -11,13 +11,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from keras.models import Sequential
-from keras.layers import Dense, Activation
+from keras.layers import Dense, Activation, Dropout, Conv1D, GlobalAveragePooling1D, MaxPooling1D
 from keras.layers.convolutional import Conv3D
 from keras.layers.convolutional_recurrent import ConvLSTM2D
 from keras.layers.normalization import BatchNormalization
 from keras.preprocessing.sequence import pad_sequences
 from keras.layers import Flatten
 from keras.layers.embeddings import Embedding
+from keras.optimizers import SGD
 
 class lstm_sentiment(nn.Module):
     def __init__(self, embedding_dim, hidden_dim, vocab_size, tagset_size):
@@ -91,9 +92,14 @@ def basic_nn(trainSamples, trainTags, testSamples, testTags, embed_size, epoc):
     model = Sequential()
     model.add(Embedding(len(word_to_index), embed_size, input_length=maximum_length))
     model.add(Flatten())
-    model.add(Dense(1, activation='sigmoid'))
+    model.add(Dense(64, activation='relu'))
+    #model.add(Dropout(0.2))
+    model.add(Dense(64, activation='relu'))
+    #model.add(Dropout(0.2))
+    model.add(Dense(1, activation='softmax'))
+    sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
     # compile
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['acc'])
+    model.compile(optimizer=sgd, loss='binary_crossentropy', metrics=['acc'])
     # fit model
     trainTags=np.asarray(trainTags)
     model.fit(padded, trainTags, epochs=epoc, verbose=0)
@@ -104,6 +110,40 @@ def basic_nn(trainSamples, trainTags, testSamples, testTags, embed_size, epoc):
     # test
     score = model.evaluate(padded_test, testTags, verbose=1)
     return score
+
+def convNN(trainSamples, trainTags, testSamples, testTags, embed_size, epoc):
+    # prep data
+    # First set up word to index encoding
+    word_to_index = word2ix(trainSamples)
+    # Create encoded list of samples
+    encoded_samples = [encodeSample(s, word_to_index) for s in trainSamples]
+    # pad all samples
+    maximum_length = max(preprocess.get_max_len(trainSamples), preprocess.get_max_len(testSamples))
+    padded_s = pad_sequences(encoded_samples, maxlen = maximum_length, padding = 'post')
+    testWord_to_ix = word2ix(testSamples)
+    encoded_test = [encodeSample(s, testWord_to_ix) for s in testSamples]
+    padded_t = pad_sequences(encoded_test, maxlen = maximum_length, padding = 'post')
+    # build model
+    model = Sequential()
+    model.add(Embedding(len(word_to_index), embed_size, input_length=maximum_length))
+    model.add(Conv1D(64, 3, activation='relu'))
+    model.add(Conv1D(64, 3, activation='relu'))
+    model.add(MaxPooling1D(3))
+    model.add(Conv1D(128, 3, activation='relu'))
+    model.add(Conv1D(128, 3, activation='relu'))
+    model.add(GlobalAveragePooling1D())
+    model.add(Dropout(0.5))
+    model.add(Dense(1, activation='sigmoid'))
+
+    # test model
+    model.compile(loss='binary_crossentropy',
+              optimizer='rmsprop',
+              metrics=['accuracy'])
+    
+    model.fit(padded_s, trainTags, batch_size=16, epochs=epoc)
+    score = model.evaluate(padded_t, testTags, batch_size=16)
+    return score
+
 
 def main():
     #tweet_dict = retrieve_data.open_csv()
@@ -121,7 +161,8 @@ def main():
                 preprocess.punctuation, preprocess.stem_all], .2)
     print(len(a[0][0]))
     print(len(b[0][0]))
-    print(basic_nn(a[0], a[1], b[0], b[1], 12, 50))
+    #print("\n"+str(basic_nn(a[0], a[1], b[0], b[1], 24, 300)))
+    print("\n"+str(convNN(a[0], a[1], b[0], b[1], 300, 300)))
    # model1 = Sequential([
    ##         Dense(32, input_shape = (784,)),
    #         Activation('relu'),
