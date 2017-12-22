@@ -1,28 +1,19 @@
-import numpy as np
-import sklearn
-from sklearn.feature_extraction.text import CountVectorizer
-import nltk
-from nltk import word_tokenize
 from nltk import TweetTokenizer
-from nltk import NaiveBayesClassifier
-from nltk.util import bigrams
 from nltk.corpus import stopwords
 import numpy as np
-from nltk.corpus import PlaintextCorpusReader
 import string
 from sklearn import svm
-from sklearn.feature_extraction import DictVectorizer
 from nltk.stem import PorterStemmer
-import codecs
-from sklearn import datasets
-from sklearn import linear_model
+
 from sklearn.naive_bayes import BernoulliNB
 import pandas as pd
 from sklearn import cross_validation
 
-csv_file = "/Users/amandaivey/PycharmProjects/comp550proj/apple_data_2.csv"
+#enter csv file with twitter data to analyze
+#csv_file =
 
-NUMBER_OF_FEATS = 500
+#parameter that can be tuned
+NUMBER_OF_FEATS = 2000
 STOPWORDS = set(stopwords.words('english'))
 
 #Over whole dataset
@@ -74,7 +65,8 @@ def stem_all(data):
         stemmed.append(t)
     return stemmed
 
-FUNCTIONS = [tokenize, casing, punctuation, stem_all, stops]
+#modify this list based on what parameters you'd like to include
+FUNCTIONS = [tokenize, stops, casing, stem_all]
 
 def setup_corpus(data):
     for f in FUNCTIONS:
@@ -129,7 +121,7 @@ def get_accuracy(correct, predictions):
         i += 1
     return float(total_correct)/total
 
-def test_model(classifier):
+def test_model():
     df = pd.read_csv(csv_file, sep=',', header=None)
     x = np.array(df.ix[:, 0])
     y = np.array(df.ix[:, 1])
@@ -144,20 +136,27 @@ def test_model(classifier):
 
     X_train, X_test, y_train, y_test = cross_validation.train_test_split(x_data, y_data, test_size=0.2, random_state=42)
 
-    if classifier == "svm":
-        clf = svm.SVC(kernel='linear')
-    else:
-        clf = BernoulliNB()
-
+    # if classifier == "svm":
+    #     clf = svm.SVC(kernel='linear')
+    # else:
+    clf = BernoulliNB()
     clf.fit(X_train, y_train)
     predictions = clf.predict(X_test)
     accuracy = (get_accuracy(y_test, predictions))
-    print "Average " + classifier + " accuracy: {}".format(accuracy)
-    return accuracy
+    print "Average bayes" + " accuracy: {}".format(accuracy)
+
+    clf_svm = svm.SVC(kernel='linear')
+    clf_svm.fit(X_train, y_train)
+    predictions_too = clf_svm.predict(X_test)
+    accuracy_too = get_accuracy(y_test, predictions_too)
+    print "Average svm" + " accuracy: {}".format(accuracy_too)
+    #return accuracy
+
+
 
 def main():
-    test_model("svm")
-    test_model("bayes")
+    test_model()
+
 
 if __name__=='__main__':
     main()
