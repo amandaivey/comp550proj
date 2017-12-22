@@ -173,7 +173,7 @@ def genLists(filename):
     for line in f:
         s, t = line.split("|")
         samples.append(s)
-        targets.append(float(t.strip()))
+        targets.append(int(t.strip()))
     f.close()
     return (samples, targets)
 

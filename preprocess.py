@@ -1,8 +1,6 @@
 '''
 @author: Theodore Morley
 A set of functions for preprocessing data before moving it into the model
-TODO IDEAS:
-    Remove URLS
 '''
 
 import string
